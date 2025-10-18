@@ -1,0 +1,196 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Sex {
+  Male
+  Female
+}
+
+enum ArticleType {
+  medicine
+  general
+}
+
+model Role {
+  id        String       @id @default(uuid()) @db.Uuid
+  name      String       @unique @db.VarChar(20)
+  userRoles RoleToUser[]
+  createdAt DateTime     @default(now()) @map(name: "created_at")
+  updatedAt DateTime     @default(now()) @map(name: "updated_at")
+
+  @@map("roles")
+}
+
+model User {
+  id                 String            @id @unique @default(uuid()) @db.Uuid
+  name               String            @db.VarChar(100)
+  dni                String?           @db.VarChar(15)
+  phone              String?           @db.VarChar(15)
+  email              String?           @db.VarChar(100)
+  license            String?           @db.VarChar(20)
+  password           String?           @db.VarChar(100)
+  createdAt          DateTime          @default(now()) @map(name: "created_at")
+  updatedAt          DateTime          @default(now()) @map(name: "updated_at")
+  veterinaryCenterId String?           @db.Uuid
+  VeterinaryCenter   VeterinaryCenter? @relation(fields: [veterinaryCenterId], references: [id])
+  userRoles          RoleToUser[]
+  pets               Pet[]
+  receipts           Receipt[]
+  vetAppointments    Appointment[]     @relation("VetAppointments")
+  ownerAppointments  Appointment[]     @relation("OwnerAppointments")
+
+  @@map("users")
+}
+
+model RoleToUser {
+  userId    String   @db.Uuid
+  roleId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @default(now()) @map(name: "updated_at")
+
+  @@id([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+  @@map("role_to_user")
+}
+
+model VeterinaryCenter {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String    @db.VarChar(100)
+  address   String?   @db.Text
+  phone     String?   @db.VarChar(15)
+  createdAt DateTime  @default(now()) @map(name: "created_at")
+  updatedAt DateTime  @default(now()) @map(name: "updated_at")
+  users     User[]
+  services  Service[]
+  articles  Article[]
+
+  @@map("veterinary_centers")
+}
+
+model Pet {
+  id                 String              @id @default(uuid()) @db.Uuid
+  name               String              @db.VarChar(50)
+  type               String              @db.VarChar(30)
+  breed              String?             @db.VarChar(50)
+  color              String?             @db.VarChar(30)
+  sex                Sex
+  owner_id           String              @db.Uuid
+  owner              User                @relation(fields: [owner_id], references: [id], onDelete: Cascade)
+  createdAt          DateTime            @default(now()) @map(name: "created_at")
+  updatedAt          DateTime            @default(now()) @map(name: "updated_at")
+  appointmentDetails AppointmentDetail[]
+
+  @@index([owner_id])
+  @@map("pets")
+}
+
+model Appointment {
+  id                 String              @id @default(uuid()) @db.Uuid
+  schedule_date      DateTime
+  description        String?             @db.Text
+  veterinaryCenterId String              @db.Uuid
+  vetId              String              @db.Uuid
+  vet                User                @relation("VetAppointments", fields: [vetId], references: [id])
+  clientOwnerId      String              @db.Uuid
+  clientOwner        User                @relation("OwnerAppointments", fields: [clientOwnerId], references: [id])
+  appointmentDetails AppointmentDetail[]
+  createdAt          DateTime            @default(now()) @map(name: "created_at")
+  updatedAt          DateTime            @default(now()) @map(name: "updated_at")
+
+  @@index([veterinaryCenterId])
+  @@index([vetId])
+  @@index([clientOwnerId])
+  @@map("appointments")
+}
+
+model AppointmentDetail {
+  id            String      @id @default(uuid()) @db.Uuid
+  appointmentId String      @db.Uuid
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  petId         String      @db.Uuid
+  pet           Pet         @relation(fields: [petId], references: [id])
+  serviceId     String      @db.Uuid
+  service       Service     @relation(fields: [serviceId], references: [id])
+  createdAt     DateTime    @default(now()) @map(name: "created_at")
+  updatedAt     DateTime    @default(now()) @map(name: "updated_at")
+
+  @@index([appointmentId])
+  @@index([petId])
+  @@index([serviceId])
+  @@map("appointment_details")
+}
+
+model Article {
+  id                 String            @id @default(uuid()) @db.Uuid
+  type               ArticleType
+  name               String            @db.VarChar(100)
+  description        String?           @db.Text
+  stock              Int               @default(0)
+  createdAt          DateTime          @default(now()) @map(name: "created_at")
+  updatedAt          DateTime          @default(now()) @map(name: "updated_at")
+  receiptDetails     ReceiptDetail[]
+  VeterinaryCenter   VeterinaryCenter? @relation(fields: [veterinaryCenterId], references: [id])
+  veterinaryCenterId String?           @db.Uuid
+
+  @@map("articles")
+}
+
+model Service {
+  id                 String              @id @default(uuid()) @db.Uuid
+  name               String              @db.VarChar(100)
+  description        String?             @db.Text
+  createdAt          DateTime            @default(now()) @map(name: "created_at")
+  updatedAt          DateTime            @default(now()) @map(name: "updated_at")
+  receiptDetails     ReceiptDetail[]
+  VeterinaryCenter   VeterinaryCenter?   @relation(fields: [veterinaryCenterId], references: [id])
+  veterinaryCenterId String?             @db.Uuid
+  AppointmentDetail  AppointmentDetail[]
+
+  @@map("services")
+}
+
+model Receipt {
+  id             String          @id @default(uuid()) @db.Uuid
+  total          Decimal         @db.Decimal(10, 2)
+  createdAt      DateTime        @default(now()) @map(name: "created_at")
+  updatedAt      DateTime        @default(now()) @map(name: "updated_at")
+  receiptDetails ReceiptDetail[]
+  User           User?           @relation(fields: [userId], references: [id])
+  userId         String?         @db.Uuid
+
+  @@map("receipts")
+}
+
+model ReceiptDetail {
+  id        String   @id @default(uuid()) @db.Uuid
+  receiptId String   @db.Uuid
+  receipt   Receipt  @relation(fields: [receiptId], references: [id])
+  articleId String?  @db.Uuid
+  article   Article? @relation(fields: [articleId], references: [id])
+  serviceId String?  @db.Uuid
+  service   Service? @relation(fields: [serviceId], references: [id])
+  quantity  Int      @default(1)
+  price     Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @default(now()) @map(name: "updated_at")
+
+  @@index([receiptId])
+  @@index([articleId])
+  @@index([serviceId])
+  @@map("receipt_details")
+}
