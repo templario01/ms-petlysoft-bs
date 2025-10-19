@@ -69,15 +69,15 @@ model RoleToUser {
 }
 
 model VeterinaryCenter {
-  id        String    @id @default(uuid()) @db.Uuid
-  name      String    @db.VarChar(100)
-  address   String?   @db.Text
-  phone     String?   @db.VarChar(15)
-  createdAt DateTime  @default(now()) @map(name: "created_at")
-  updatedAt DateTime  @default(now()) @map(name: "updated_at")
-  users     User[]
-  services  Service[]
-  articles  Article[]
+  id          String       @id @default(uuid()) @db.Uuid
+  name        String       @db.VarChar(100)
+  address     String?      @db.Text
+  phone       String?      @db.VarChar(15)
+  createdAt   DateTime     @default(now()) @map(name: "created_at")
+  updatedAt   DateTime     @default(now()) @map(name: "updated_at")
+  users       User[]
+  petServices PetService[]
+  inventories Inventory[]
 
   @@map("veterinary_centers")
 }
@@ -124,18 +124,18 @@ model AppointmentDetail {
   appointment   Appointment @relation(fields: [appointmentId], references: [id])
   petId         String      @db.Uuid
   pet           Pet         @relation(fields: [petId], references: [id])
-  serviceId     String      @db.Uuid
-  service       Service     @relation(fields: [serviceId], references: [id])
+  petServiceId  String      @db.Uuid
+  petService    PetService  @relation(fields: [petServiceId], references: [id])
   createdAt     DateTime    @default(now()) @map(name: "created_at")
   updatedAt     DateTime    @default(now()) @map(name: "updated_at")
 
   @@index([appointmentId])
   @@index([petId])
-  @@index([serviceId])
+  @@index([petServiceId])
   @@map("appointment_details")
 }
 
-model Article {
+model Inventory {
   id                 String            @id @default(uuid()) @db.Uuid
   type               ArticleType
   name               String            @db.VarChar(100)
@@ -147,10 +147,10 @@ model Article {
   VeterinaryCenter   VeterinaryCenter? @relation(fields: [veterinaryCenterId], references: [id])
   veterinaryCenterId String?           @db.Uuid
 
-  @@map("articles")
+  @@map("inventories")
 }
 
-model Service {
+model PetService {
   id                 String              @id @default(uuid()) @db.Uuid
   name               String              @db.VarChar(100)
   description        String?             @db.Text
@@ -161,7 +161,7 @@ model Service {
   veterinaryCenterId String?             @db.Uuid
   AppointmentDetail  AppointmentDetail[]
 
-  @@map("services")
+  @@map("pet_services")
 }
 
 model Receipt {
@@ -177,20 +177,20 @@ model Receipt {
 }
 
 model ReceiptDetail {
-  id        String   @id @default(uuid()) @db.Uuid
-  receiptId String   @db.Uuid
-  receipt   Receipt  @relation(fields: [receiptId], references: [id])
-  articleId String?  @db.Uuid
-  article   Article? @relation(fields: [articleId], references: [id])
-  serviceId String?  @db.Uuid
-  service   Service? @relation(fields: [serviceId], references: [id])
-  quantity  Int      @default(1)
-  price     Decimal  @db.Decimal(10, 2)
-  createdAt DateTime @default(now()) @map(name: "created_at")
-  updatedAt DateTime @default(now()) @map(name: "updated_at")
+  id           String      @id @default(uuid()) @db.Uuid
+  receiptId    String      @db.Uuid
+  receipt      Receipt     @relation(fields: [receiptId], references: [id])
+  inventoryId  String?     @db.Uuid
+  inventory    Inventory?  @relation(fields: [inventoryId], references: [id])
+  petServiceId String?     @db.Uuid
+  petService   PetService? @relation(fields: [petServiceId], references: [id])
+  quantity     Int         @default(1)
+  price        Decimal     @db.Decimal(10, 2)
+  createdAt    DateTime    @default(now()) @map(name: "created_at")
+  updatedAt    DateTime    @default(now()) @map(name: "updated_at")
 
   @@index([receiptId])
-  @@index([articleId])
-  @@index([serviceId])
+  @@index([inventoryId])
+  @@index([petServiceId])
   @@map("receipt_details")
 }
