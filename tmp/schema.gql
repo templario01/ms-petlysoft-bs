@@ -1,0 +1,93 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type PetService {
+  id: ID!
+  name: String!
+  description: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  veterinaryCenterId: String
+  VeterinaryCenter: VeterinaryCenter
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Inventory {
+  id: ID!
+  type: ArticleType!
+  name: String!
+  description: String
+  stock: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  veterinaryCenterId: String
+  VeterinaryCenter: VeterinaryCenter
+}
+
+enum ArticleType {
+  medicine
+  general
+}
+
+type Role {
+  id: ID!
+  name: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Pet {
+  id: ID!
+  name: String!
+  type: String!
+  breed: String
+  color: String
+  sex: Sex!
+  owner_id: String!
+  owner: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""The biological sex of the pet"""
+enum Sex {
+  Male
+  Female
+}
+
+type User {
+  id: ID!
+  name: String!
+  dni: String
+  phone: String
+  email: String
+  license: String
+  password: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  veterinaryCenterId: String
+  VeterinaryCenter: VeterinaryCenter
+  roles: [Role!]
+  pets: [Pet!]
+}
+
+type VeterinaryCenter {
+  id: ID!
+  name: String!
+  address: String
+  phone: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  users: [User!]
+  petServices: [PetService!]
+  inventories: [Inventory!]
+}
+
+type Query {
+  veterinaryCenter(id: String!): VeterinaryCenter!
+}
